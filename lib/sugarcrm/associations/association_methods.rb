@@ -25,13 +25,16 @@ module SugarCRM; module AssociationMethods
   # before setting the new relationship.
   # This method is useful when certain modules have many links to other modules: not loading the
   # relationships allows one to avoid a Timeout::Error
+  # DJE - Allow the caller to provide a link_field_name to override what it infers is correct
   def associate!(target,opts={})
     targets = Array.wrap(target)
+    link_field = opts.delete(:link_field_name)
+    link_field ||= association.link_field
     targets.each do |t|
       association = @associations.find!(t)
       response = self.class.session.connection.set_relationship(
         self.class._module.name, self.id, 
-        association.link_field, [t.id], opts
+        link_field, [t.id], opts
       )
       if response["failed"] > 0
         raise AssociationFailed, 
